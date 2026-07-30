@@ -241,6 +241,61 @@ $ docker stats --no-stream
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT   MEM %     NET I/O   BLOCK I/O   PIDS
 
 
+## 컨테이너 실행 및 관리
+** 첫번째 컨테이너 실행하기 ( Hello World) **
+$ docker run hello-world
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+4f55086f7dd0: Pull complete 
+Digest: sha256:c3cbe1cc1aa588a64951ac6286e0df7b27fe2e6324b1001c619bb358770c0178
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+
+** 웹서버 실행하기 (Nginx)
+$ docker run -d -p 8080:80 --name my-web nginx
+6851386810e6cbe42ae6afdd8a1f352b25b342ca1335403bf1ded1df72287870
+**브라우저에서 localhost:8080 접속 성공 확인**
+Welcome to nginx!
+If you see this page, nginx is successfully installed and working. Further configuration is required for the web server, reverse proxy, API gateway, load balancer, content cache, or other features.
+
+For online documentation and support please refer to nginx.org.
+To engage with the community please visit community.nginx.org.
+For enterprise grade support, professional services, additional security features and capabilities please refer to f5.com/nginx.
+
+Thank you for using nginx.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -464,3 +519,46 @@ Server:
 WARNING: DOCKER_INSECURE_NO_IPTABLES_RAW is set
 renoirk9330@c6r7s1 mission1 % 
 
+renoirk9330@c6r7s1 mission1 % docker run hello-world
+Unable to find image 'hello-world:latest' locally
+latest: Pulling from library/hello-world
+4f55086f7dd0: Pull complete 
+Digest: sha256:c3cbe1cc1aa588a64951ac6286e0df7b27fe2e6324b1001c619bb358770c0178
+Status: Downloaded newer image for hello-world:latest
+
+Hello from Docker!
+This message shows that your installation appears to be working correctly.
+
+To generate this message, Docker took the following steps:
+ 1. The Docker client contacted the Docker daemon.
+ 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.
+    (amd64)
+ 3. The Docker daemon created a new container from that image which runs the
+    executable that produces the output you are currently reading.
+ 4. The Docker daemon streamed that output to the Docker client, which sent it
+    to your terminal.
+
+To try something more ambitious, you can run an Ubuntu container with:
+ $ docker run -it ubuntu bash
+
+Share images, automate workflows, and more with a free Docker ID:
+ https://hub.docker.com/
+
+For more examples and ideas, visit:
+ https://docs.docker.com/get-started/
+
+renoirk9330@c6r7s1 mission1 % docker run -d -p 8080:80 --name my-web nginx
+docker: Error response from daemon: Conflict. The container name "/my-web" is already in use by container "d5882f1b2fe4f633d1dc9cf37f8137d255e26f358edbac41a1e84fd922fe7db0". You have to remove (or rename) that container to be able to reuse that name.
+
+Run 'docker run --help' for more information
+renoirk9330@c6r7s1 mission1 % docker ps
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+renoirk9330@c6r7s1 mission1 % docker ps -a                                
+CONTAINER ID   IMAGE         COMMAND                   CREATED          STATUS                      PORTS     NAMES
+ef0752e80ea8   hello-world   "/hello"                  8 minutes ago    Exited (0) 8 minutes ago              zealous_diffie
+d5882f1b2fe4   nginx         "/docker-entrypoint.…"   38 minutes ago   Exited (0) 38 minutes ago             my-web
+renoirk9330@c6r7s1 mission1 % docker rm my-web
+my-web
+renoirk9330@c6r7s1 mission1 % docker run -d -p 8080:80 --name my-web nginx
+6851386810e6cbe42ae6afdd8a1f352b25b342ca1335403bf1ded1df72287870
+renoirk9330@c6r7s1 mission1 % ç
