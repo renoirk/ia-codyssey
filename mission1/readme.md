@@ -130,22 +130,31 @@ renoirk9330@c6r7s1 mission1 % echo $0
 -zsh
 renoirk9330@c6r7s1 mission1 % echo $TERM_PROGRAM
 Apple_Terminal
-renoirk9330@c6r7s1 mission1 % git add README.md
-renoirk9330@c6r7s1 mission1 % git commit -m "docs: 개발 환경 정보 (OS, Shell, Git) 추가"
+
+renoirk9330@c6r7s1 mission1 % git add .
+renoirk9330@c6r7s1 mission1 % git status
 현재 브랜치 main
 브랜치가 'origin/main'에 맞게 업데이트된 상태입니다.
 
-커밋하도록 정하지 않은 변경 사항:
-  (무엇을 커밋할지 바꾸려면 "git add <파일>..."을 사용하십시오)
-  (use "git restore <file>..." to discard changes in working directory)
+커밋할 변경 사항:
+  (use "git restore --staged <file>..." to unstage)
 	수정함:        readme.md
+	새 파일:       sample.txt
 
-추적하지 않는 파일:
-  (커밋할 사항에 포함하려면 "git add <파일>..."을 사용하십시오)
-	sample.txt
-
-커밋할 변경 사항을 추가하지 않았습니다 ("git add" 및/또는 "git commit -a"를
-사용하십시오)
+renoirk9330@c6r7s1 mission1 % git commit -m "docs: 개발 환경 정보 추가"                 
+[main 7bce5d5] docs: 개발 환경 정보 추가
+ 2 files changed, 114 insertions(+), 6 deletions(-)
+ create mode 100644 mission1/sample.txt
 renoirk9330@c6r7s1 mission1 % git push origin main
-Everything up-to-date
+오브젝트 나열하는 중: 8, 완료.
+오브젝트 개수 세는 중: 100% (8/8), 완료.
+Delta compression using up to 6 threads
+오브젝트 압축하는 중: 100% (4/4), 완료.
+오브젝트 쓰는 중: 100% (5/5), 2.07 KiB | 2.07 MiB/s, 완료.
+Total 5 (delta 0), reused 0 (delta 0), pack-reused 0 (from 0)
+To https://github.com/renoirk/ia-codyssey.git
+   d51aa51..7bce5d5  main -> main
+renoirk9330@c6r7s1 mission1 % 
+
+
 renoirk9330@c6r7s1 mission1 % 
