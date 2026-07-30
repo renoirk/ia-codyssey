@@ -7,8 +7,7 @@
 - **Git Version**: git version 2.53.0
 - **Docker Version**: Docker version 28.5.2, build ecc6942
 
-git --version
-\git version 2.53.0
+
 
 #2. 수행 체크리스트
 
@@ -284,6 +283,15 @@ For enterprise grade support, professional services, additional security feature
 
 Thank you for using nginx.
 
+### 2. Nginx 컨테이너 실습
+- **컨테이너 접속 및 수정**:
+$ docker ps # 실행중인 컨테이너 목록 확인
+CONTAINER ID   IMAGE     COMMAND                   CREATED          STATUS          PORTS                                     NAMES
+6851386810e6   nginx     "/docker-entrypoint.…"   24 minutes ago   Up 24 minutes   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp   my-web
+  $ docker exec -it my-web bash` # 컨테이너 내부 접속
+root@6851386810e6:/# echo "<h1>Hello, Docker Odyssey! My name is Shirley Kim </h1>" > /usr/share/nginx/html/index.html # 메인 페이지 문구 수정
+#브라우저로 가서 localhost:8080 문구 확인
+Hello, Docker Odyssey! My name is Shirley Kim
 
 
 
