@@ -240,8 +240,8 @@ $ docker stats --no-stream
 CONTAINER ID   NAME      CPU %     MEM USAGE / LIMIT   MEM %     NET I/O   BLOCK I/O   PIDS
 
 
-## 컨테이너 실행 및 관리
-** 첫번째 컨테이너 실행하기 ( Hello World) **
+##7.컨테이너 실행 및 관리
+### 1) 첫번째 컨테이너 실행하기 ( Hello World)
 $ docker run hello-world
 Unable to find image 'hello-world:latest' locally
 latest: Pulling from library/hello-world
@@ -270,7 +270,37 @@ Share images, automate workflows, and more with a free Docker ID:
 For more examples and ideas, visit:
  https://docs.docker.com/get-started/
 
-** 웹서버 실행하기 (Nginx)
+### 2) buntu 컨테이너 실행 및 내부 명령 수행
+$ docker run -it ubuntu /bin/bash
+Unable to find image 'ubuntu:latest' locally
+latest: Pulling from library/ubuntu
+ed819469700f: Pull complete 
+a3679419df18: Pull complete 
+Digest: sha256:3131b4cc82a783df6c9df078f86e01819a13594b865c2cad47bd1bca2b7063bb
+Status: Downloaded newer image for ubuntu:latest
+
+ls
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+root@792e4a08e15d:/# echo " Hello from Ubuntu Container!"
+ Hello from Ubuntu Container!
+
+echo "Hello from Ubuntu Container!"
+Hello from Ubuntu Container!
+
+### 3) 컨테이너 종료/유지 및 attach/exec 차이 정리
+① 컨테이너 빠져나오기 (종료 vs 유지)
+exit 입력: 컨테이너 내부 쉘을 종료하면서 컨테이너도 함께 정지(Stop) 시킨다.
+Ctrl + P, Q 입력: 컨테이너를 정지시키지 않고(Running) 백그라운드로 빠져나온다.
+② attach vs exec (실행 중인 컨테이너 접속)
+docker attach: 특징	행 중인 컨테이너의 **메인 프로세스(PID 1)**에 접속.	
+docker exec: 실행 중인 컨테이너에 새로운 프로세스를 실행.
+
+
+$ curl http://localhost:8080
+<img width="1160" height="412" alt="image" src="https://github.com/user-attachments/assets/23af6809-8a09-40ef-9085-65b192242e02" />
+
+##8.1 웹서버 실행하기 (Nginx)
+###1) 포트 매팅 접속
 $ docker run -d -p 8080:80 --name my-web nginx
 6851386810e6cbe42ae6afdd8a1f352b25b342ca1335403bf1ded1df72287870
 **브라우저에서 localhost:8080 접속 성공 확인**
@@ -294,6 +324,52 @@ root@6851386810e6:/# echo "<h1>Hello, Docker Odyssey! My name is Shirley Kim </h
 Hello, Docker Odyssey! My name is Shirley Kim
 
 
+##8.2 Docker를 이용한 웹 서버 배포 실습
+*Docker 이미지 빌드한다: Dockerfile을 작성하고 docker build를 통해 독립적인 실행 환경을 생성함.
+*포트 포워딩(Port Mapping): -p 8080:5000 옵션을 통해 호스트 OS와 컨테이너 내부의 네트워크를 연결함.
+*로그 확인: docker logs [컨테이너명]을 통해 서버 내부의 동작 상태를 확인함.
+
+🐳Docker를 사용하여 간단한 Python Flask 웹 서버를 컨테이너화하고 배포.
+
+(1). 프로젝트 구조
+my-web-app/
+├── app/
+│   └── main.py       # Flask 웹 애플리케이션 소스
+└── Dockerfile        # Docker 이미지 빌드 설정 파일
+
+(2). 주요 구성 파일
+🐍 Python 애플리케이션 (app/main.py)
+Flask를 사용하여 0.0.0.0:5000 포트에서 동작하는 간단한 웹 서버.
+python
+📋 복사
+from flask import Flask
+app = Flask(__name__)
+@app.route('/')
+def hello_world():
+    return '<h1>Docker Web Server Success!</h1>'
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
+
+🐳 Docker 설정 (Dockerfile)
+dockerfile
+FROM python:3.9-slim # 1. 베이스 이미지 설정 (Python 3.9)
+WORKDIR /app# 2. 작업 디렉토리 설정
+RUN pip install flask # 3. Flask 설치
+COPY ./app /app # 4. 소스 코드 복사
+CMD ["python", "main.py"] # 5. 컨테이너 실행
+
+(3). 실행
+1) Docker 이미지 빌드
+터미널에서 프로젝트 루트 폴더로 이동한 후 아래 명령어를 입력.
+$ docker build -t my-web-server .
+2) Docker 컨테이너 실행
+빌드된 이미지를 바탕으로 컨테이너를 실행. 호스트의 8080 포트를 컨테이너의 5000 포트와 연결.
+$ docker run -d -p 8080:5000 --name my-running-app my-web-server
+3) 접속 확인
+브라우저에서 다음 주소에 접속하거나 curl 명령어를 사용.
+URL: http://localhost:8080
+$ curl http://localhost:8080
+<h1>Docker Web Server Success!</h1>%
 
 
 
