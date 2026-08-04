@@ -409,6 +409,29 @@ Docker Volume Success!
 7) 결론
 컨테이너를 삭제하고 새로 생성했음에도 불구하고, 볼륨에 저장된 데이터는 삭제되지 않고 유지됨을 확인.
 
+## Git 설정 및 GitHub 연동 기록
+
+### 1). Git 사용자 정보 및 기본 설정
+$ git config --list
+credential.helper=osxkeychain
+core.repositoryformatversion=0
+core.filemode=true
+core.bare=false
+core.logallrefupdates=true
+core.ignorecase=true
+core.precomposeunicode=true
+pull.rebase=false
+remote.origin.url=https://github.com/renoirk/ia-codyssey.git
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+
+### 2). GitHub 저장소 연동 확인
+$ git remote -v
+origin	https://github.com/renoirk/ia-codyssey.git (fetch)
+origin	https://github.com/renoirk/ia-codyssey.git (push)
+
+### 3). 연동 증거
+* GitHub 저장소 URL: https://github.com/renoirk/ia-codyssey
+* 로컬 작업 디렉토리와 원격 저장소가 성공적으로 연결되어 push/pull이 가능한 상태입니다.
 
 
 
