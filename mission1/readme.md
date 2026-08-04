@@ -673,3 +673,25 @@ my-web
 renoirk9330@c6r7s1 mission1 % docker run -d -p 8080:80 --name my-web nginx
 6851386810e6cbe42ae6afdd8a1f352b25b342ca1335403bf1ded1df72287870
 renoirk9330@c6r7s1 mission1 % ç
+
+---
+
+## 🛠 Git 설정 및 GitHub 연동 기록
+
+### 1. Git 사용자 정보 및 기본 설정
+```bash
+# git config --list 실행 결과 (주요 설정)
+
+```
+
+### 2. GitHub 저장소 연동 확인
+```bash
+# git remote -v 실행 결과
+origin	https://github.com/renoirk/ia-codyssey.git (fetch)
+origin	https://github.com/renoirk/ia-codyssey.git (push)
+```
+
+### 3. 연동 증거
+* GitHub 저장소 URL: https://github.com/renoirk/ia-codyssey
+* 로컬 작업 디렉토리와 원격 저장소가 성공적으로 연결되어 push/pull이 가능한 상태입니다.
+
