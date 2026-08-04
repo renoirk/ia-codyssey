@@ -371,7 +371,23 @@ URL: http://localhost:8080
 $ curl http://localhost:8080
 <h1>Docker Web Server Success!</h1>%
 
-
+##9. Docker 볼륨 영속성 검증
+Docker 컨테이너는 삭제되면 내부의 데이터도 함께 사라지는 휘발성 특징을 가지고 있습니다. 이를 해결하기 위해 Docker Volume을 사용하여 컨테이너가 삭제되어도 데이터가 안전하게 유지(영속성)되는지 검증.
+1)볼륨을 연결하여 컨테이너 실행
+my-db-data라는 이름의 볼륨을 생성함과 동시에 컨테이너의 /app/data 경로에 마운트
+$ docker run -d -p 8080:5000 -v my-db-data:/app/data --name web-server my-web-app
+2) 데이터 생성
+$ docker exec web-server sh -c "echo 'Docker Volume Success!' > /app/data/test.txt"
+3)컨테이너 삭제 (Destroy)
+$ docker rm -f web-server
+4) 새 컨테이너에서 볼륨 재연결 (Restore)
+$ docker run -d -p 8080:5000 -v my-db-data:/app/data --name web-server my-web-app
+5) 데이터 유지 확인 (Verify)
+$ docker exec web-server cat /app/data/test.txt
+6) 출력
+Docker Volume Success!
+7) 결론
+컨테이너를 삭제하고 새로 생성했음에도 불구하고, 볼륨에 저장된 데이터는 삭제되지 않고 유지됨을 확인.
 
 
 
