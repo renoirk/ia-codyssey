@@ -322,6 +322,20 @@ docker exec web-server cat /app/data/test.txt
 
 ---
 
+6. **바인드 마운트(Bind Mount) 및 볼륨 백업/복원**
+```bash
+#바인드마운트
+docker run -d -p 8080:5000 -v $(pwd)/local_data:/app/data --name web-server my-web-app
+
+#볼륨 데이터 백업
+(임시 컨테이너(alpine)를 실행하여 my-db-data 볼륨 내부의 데이터를 호스트의 현재 경로에 backup.tar 파일로 백업)
+docker run --rm -v my-db-data:/volume -v $(pwd):/backup alpine tar cvf /backup/backup.tar -C /volume .
+
+#볼륨 데이터 복원(Restore)
+docker run --rm -v my-db-data:/volume -v $(pwd):/backup alpine tar xvf /backup/backup.tar -C /volume
+```
+---
+
 ## 8. Git 설정 및 GitHub 연동 기록
 
 ```bash
@@ -356,6 +370,15 @@ origin	[https://github.com/renoirk/ia-codyssey.git](https://github.com/renoirk/i
 * **확인:** `ls -l sample.txt`로 `-r--------` 권한 상태임을 재확인.
 * **대안/해결:** 쓰기 테스트를 위해 `chmod 600 sample.txt`로 소유자 쓰기 권한을 부여한 후 다시 시도하여 성공함.
 
+### 3) 포트 충돌 진단
+* **문제:** 컨테이너 실행 시 특정 포트(예: 8080)가 이미 사용 중이라는 포트 충돌 에러가 발생함.
+
+* **확인:** lsof 또는 netstat  명령어 사용하여 포트,프로세스 확인
+lsof -i :8080
+netstat -an | grep 8080
+* **해결:** :  프로세스 종료 (kill) 또는 포트 변경 (예: 8081). 
+kill -9 8080
+docker run -d -p 8081:5000 -v my-db-data:/app/data --name web-server my-web-app
 
 ---
 
