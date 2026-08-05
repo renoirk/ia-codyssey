@@ -197,6 +197,11 @@ Server:
 # 이미지 다운로드
 docker pull nginx
 
+# 다운로드된 도커 이미지 목록 확인
+docker images
+REPOSITORY   TAG       IMAGE ID       CREATED       SIZE
+nginx        latest    a6bd71f48f68   1 weeks ago   187MB
+
 # 다운로드한 이미지 실행
 docker run -d --name my-web nginx
 
@@ -204,6 +209,16 @@ docker run -d --name my-web nginx
 docker logs my-web
 docker stats --no-stream
 
+# 전체 컨테이너 목록(중지된 컨테이너 포함) 확인
+docker ps -a
+CONTAINER ID   IMAGE     COMMAND                  CREATED          STATUS          PORTS     NAMES
+abc123def456   nginx     "/docker-entrypoint.…"   10 minutes ago   Up 10 minutes   80/tcp    my-web
+
+# 컨테이너 중지 및 삭제
+docker stop my-web
+my-web
+docker rm my-web
+my-web
 ```
 
 ### 3) hello-world 및 ubuntu 테스트
@@ -348,6 +363,16 @@ git remote -v
 origin	[https://github.com/renoirk/ia-codyssey.git](https://github.com/renoirk/ia-codyssey.git) (fetch)
 origin	[https://github.com/renoirk/ia-codyssey.git](https://github.com/renoirk/ia-codyssey.git) (push)
 
+# GitHub 원격 저장소로 푸시(Publish) 성공 로그
+git push origin main
+# Enumerating objects: 5, done.
+# Counting objects: 100% (5/5), done.
+# Delta compression using up to 6 threads
+# Compressing objects: 100% (3/3), done.
+# Writing objects: 100% (3/3), 987 bytes | 987.00 KiB/s, done.
+# Total 3 (delta 1), reused 0 (delta 0), pack-reused 0
+# To [https://github.com/renoirk/ia-codyssey.git](https://github.com/renoirk/ia-codyssey.git)
+#    d3b0738..f9a531b  main -> main
 ```
 
 * **연동 증거:** 로컬 작업 디렉토리와 원격 저장소(`https://github.com/renoirk/ia-codyssey`)가 성공적으로 연결되어 push/pull 확인.
@@ -387,7 +412,7 @@ docker run -d -p 8081:5000 -v my-db-data:/app/data --name web-server my-web-app
 1. **절대 경로와 상대 경로의 차이:**
 * 절대 경로는 디렉토리 트리의 가장 최상단인 루트(`/`)부터 목적지까지의 전체 경로를 의미합니다. (예: `/Users/renoirk9330/ia-codyssey/mission1`)
 * 상대 경로는 현재 내가 위치한 디렉토리를 기준으로 한 목적지까지의 경로입니다. (예: `./mission1` 또는 `../test_dir`)
-
+상황별 권장안: Docker 환경에서 호스트(내 컴퓨터)의 디렉터리를 마운트할 때는 다른 사람의 환경에서도 동일하게 동작(재현성 확보)할 수 있도록 현재 위치를 나타내는 상대 경로(예: $(pwd))를 활용하는 것이 좋습니다. 반면, 컨테이너 내부 환경이나 Dockerfile 내에서 작업 디렉터리를 지정할 때는 위치 혼동을 방지하기 위해 명확한 절대 경로(예: /app)를 사용하는 것을 권장합니다.
 
 2. **파일 권한(r/w/x)과 755, 644 해석:**
 * r(읽기=4), w(쓰기=2), x(실행=1)을 뜻하며, 세 자리는 각각 소유자(User), 그룹(Group), 기타(Others)의 권한 합입니다.
@@ -396,7 +421,7 @@ docker run -d -p 8081:5000 -v my-db-data:/app/data --name web-server my-web-app
 
 
 3. **포트 매핑이 필요한 이유:**
-* 컨테이너는 호스트(내 컴퓨터)와 독립된 격리 네트워크 공간을 사용합니다. 외부에서 브라우저 등을 통해 컨테이너 안에서 도는 웹서버에 접속하려면, 내 컴퓨터의 특정 포트로 들어오는 요청을 컨테이너 내부의 포트로 연결(포워딩)해 주어야만 통신이 가능하기 때문입니다.
+* 컨테이너는 호스트(내 컴퓨터)와 독립된 격리 네트워크 공간을 사용합니다. 외부에서 브라우저 등을 통해 컨테이너 안에서 도는 웹서버에 접속하려면, 내 컴퓨터의 특정 포트로 들어오는 요청을 컨테이너 내부의 포트로 연결(포워딩)해 주어야만 통신이 가능하기 때문입니다. 또한, 보안상 필요한 포트(예: 80, 443)만 선별적으로 매핑하여 외부에 노출되는 포트를 최소화하는 것이 권장됩니다.
 
 
 4. **Docker 볼륨 (영속 데이터):**
