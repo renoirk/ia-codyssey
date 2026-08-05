@@ -401,8 +401,10 @@ git push origin main
 * **확인:** lsof 또는 netstat  명령어 사용하여 포트,프로세스 확인
 lsof -i :8080
 netstat -an | grep 8080
-* **해결:** :  프로세스 종료 (kill) 또는 포트 변경 (예: 8081). 
+* **해결:** :  프로세스 종료 (kill) 또는 포트 변경 (예: 8081).* 
+
 kill -9 8080
+
 docker run -d -p 8081:5000 -v my-db-data:/app/data --name web-server my-web-app
 
 ---
