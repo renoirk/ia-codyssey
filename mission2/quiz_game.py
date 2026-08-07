@@ -1,3 +1,5 @@
+import json    
+
 class Quiz:
     def __init__(self, question, options, answer):
         self.question = question
@@ -12,7 +14,6 @@ class Quiz:
             "answer": self.answer
         }
 
-import json    
 
 class QuizGame:
     def __init__(self):
