@@ -20,7 +20,15 @@ class QuizGame:
             for option in quiz.options:
                 print(option)
             
-            answer = int(input("정답 번호 입력: "))
+            while True:
+                try:
+                    answer = int(input("정답 번호 입력 (1~3): "))
+                    if 1 <= answer <= 3:
+                        break                          # 올바른 입력 → 반복 탈출
+                    else:
+                        print("⚠️  1~3 사이 숫자를 입력하세요!")
+                except ValueError:
+                    print("⚠️  숫자만 입력하세요!")   # 문자 입력 시
             
             if answer == quiz.answer:
                 print("✅ 정답!\n")
