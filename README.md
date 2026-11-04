@@ -17,8 +17,8 @@ Github와 Codyssey를 연동하기 위해 만들어진 Repository입니다.
 ## 개발 환경
 
 - GitHub
-- Codyssey
 - Git
+- Codyssey
 
 ## 작성자
 
