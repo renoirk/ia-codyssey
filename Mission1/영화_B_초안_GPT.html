@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나의 영화 티어리스트</title>
+<style>
+:root{--bg:#10131b;--panel:#191e29;--panel2:#202736;--text:#f4f6fb;--muted:#a8b0c0;--line:#30394b;--accent:#f6c85f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 15% 0%,#252b3c 0,transparent 42%),var(--bg);color:var(--text);font-family:Inter,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;min-height:100vh}
+header{max-width:1180px;margin:auto;padding:34px 22px 20px;display:flex;justify-content:space-between;gap:20px;align-items:center}
+.eyebrow{color:var(--accent);font-size:11px;letter-spacing:2.5px;font-weight:800}.heading h1{font-size:clamp(25px,4vw,38px);margin:7px 0 5px;letter-spacing:-1.5px}.heading p{margin:0;color:var(--muted);font-size:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:13px}.btn.primary{background:var(--accent);border-color:var(--accent);color:#171717}.btn:hover{filter:brightness(1.1)}
+main{max-width:1180px;margin:auto;padding:0 22px 60px}.section-title{display:flex;align-items:center;justify-content:space-between;margin:18px 0 12px}.section-title h2{font-size:15px;margin:0}.hint{font-size:12px;color:var(--muted)}
+.tiers{display:flex;flex-direction:column;gap:8px}.tier{display:grid;grid-template-columns:82px 1fr;min-height:112px;border:1px solid #ffffff14;border-radius:13px;overflow:hidden;background:#ffffff08;transition:.15s}.tier.over{outline:2px dashed var(--accent);outline-offset:2px;background:#f6c85f12}.tier-label{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;font-weight:900;font-size:26px;color:#171717}.tier-label small{font-size:9px;letter-spacing:1px;opacity:.75}.tier[data-tier="S"] .tier-label{background:#ff6565}.tier[data-tier="A"] .tier-label{background:#ffad60}.tier[data-tier="B"] .tier-label{background:#f2d46b}.tier[data-tier="C"] .tier-label{background:#78c99a}.tier[data-tier="D"] .tier-label{background:#77a9ef}
+.tier-content{padding:10px;display:flex;align-items:center;align-content:flex-start;gap:9px;flex-wrap:wrap;min-width:0}.empty{color:#7e899d;font-size:12px;align-self:center;padding:8px}
+.movie{width:82px;position:relative;cursor:grab;user-select:none;touch-action:none;transition:transform .12s}.movie:active{cursor:grabbing}.movie.dragging{opacity:.35;transform:scale(.94)}.poster{width:82px;height:104px;border-radius:7px;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;box-shadow:0 4px 12px #0005;background:linear-gradient(145deg,var(--c1),var(--c2));position:relative}.poster:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#0001 15%,#0009 100%)}.poster img{position:absolute;width:100%;height:100%;object-fit:cover;inset:0}.poster span{position:relative;z-index:1;font-size:12px;line-height:1.25;font-weight:900;text-shadow:0 2px 5px #000}.movie-name{font-size:11px;line-height:1.3;text-align:center;margin-top:5px;color:#e4e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.remove{position:absolute;right:-5px;top:-6px;width:21px;height:21px;border:0;border-radius:50%;background:#f05e66;color:white;font-weight:900;cursor:pointer;display:none}.movie:hover .remove{display:block}
+.library{margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px}.library-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.library-head h2{margin:0;font-size:16px}.library-head p{margin:4px 0 0;color:var(--muted);font-size:12px}.library-grid{display:flex;gap:14px;flex-wrap:wrap;margin-top:17px;min-height:65px}.library-grid .movie{width:82px}.library-grid:empty:after{content:"모든 영화가 티어에 배치되었습니다.";font-size:12px;color:var(--muted)}
+.add-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;padding-top:15px;border-top:1px solid var(--line)}input{min-width:0;background:#111722;border:1px solid var(--line);color:var(--text);padding:10px 11px;border-radius:9px;font-size:13px;outline:none}input:focus{border-color:var(--accent)}#titleInput{flex:1;min-width:150px}#urlInput{flex:1.2;min-width:170px}.file-label{display:inline-flex;align-items:center;padding:9px 12px;border:1px dashed #58647a;border-radius:9px;color:#d5dbea;font-size:12px;cursor:pointer}input[type=file]{display:none}
+footer{color:#778195;font-size:11px;text-align:center;margin-top:22px;line-height:1.7}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#f4f6fb;color:#171b24;padding:11px 17px;border-radius:30px;font-size:13px;font-weight:700;box-shadow:0 8px 30px #0005;opacity:0;pointer-events:none;transition:.2s;z-index:20}.toast.show{opacity:1}
+#dragGhost{position:fixed;z-index:99;pointer-events:none;display:none;transform:translate(-50%,-50%) rotate(3deg);width:82px;filter:drop-shadow(0 12px 16px #0008)}
+@media(max-width:600px){header{padding-top:24px;align-items:flex-start;flex-direction:column}.actions{width:100%}.actions .btn{flex:1}.tier{grid-template-columns:55px 1fr;min-height:100px}.tier-label{font-size:22px}.tier-content{gap:7px;padding:8px}.movie,.library-grid .movie{width:68px}.poster{width:68px;height:90px}.movie-name{font-size:10px}.hint{max-width:55%;text-align:right;line-height:1.4}}
+</style>
+</head>
+<body>
+<header>
+ <div class="heading"><div class="eyebrow">MY PERSONAL MOVIE ARCHIVE</div><h1>나의 영화 티어리스트</h1><p>좋아하는 영화를 나만의 기준으로 정리해 보세요.</p></div>
+ <div class="actions"><button class="btn" id="resetBtn">초기화</button><button class="btn" id="shareBtn">공유하기</button><button class="btn primary" id="downloadBtn">이미지로 저장 ↓</button></div>
+</header>
+<main>
+ <div class="section-title"><h2>나의 영화 랭킹</h2><span class="hint">영화를 드래그하거나 터치해 원하는 등급에 놓으세요.</span></div>
+ <section class="tiers" id="tiers">
+  <div class="tier" data-tier="S"><div class="tier-label">S<small>최고</small></div><div class="tier-content"><span class="empty">영화를 여기에 놓으세요</span></div></div>
+  <div class="tier" data-tier="A"><div class="tier-label">A<small>좋아요</small></div><div class="tier-content"><span class="empty">영화를 여기에 놓으세요</span></div></div>
+  <div class="tier" data-tier="B"><div class="tier-label">B<small>보통</small></div><div class="tier-content"><span class="empty">영화를 여기에 놓으세요</span></div></div>
+  <div class="tier" data-tier="C"><div class="tier-label">C<small>아쉬움</small></div><div class="tier-content"><span class="empty">영화를 여기에 놓으세요</span></div></div>
+  <div class="tier" data-tier="D"><div class="tier-label">D<small>별로</small></div><div class="tier-content"><span class="empty">영화를 여기에 놓으세요</span></div></div>
+ </section>
+ <section class="library">
+  <div class="library-head"><div><h2>영화 보관함</h2><p>아직 등급을 정하지 않은 영화입니다. 아래에서 선택해 위쪽 티어에 배치하세요.</p></div><span class="hint" id="countText"></span></div>
+  <div class="library-grid" id="libraryGrid"></div>
+  <div class="add-form">
+   <input id="titleInput" placeholder="영화 제목 입력" maxlength="40" aria-label="영화 제목">
+   <input id="urlInput" placeholder="포스터 이미지 URL (선택)" aria-label="포스터 이미지 URL">
+   <label class="file-label" for="fileInput">파일 선택</label><input id="fileInput" type="file" accept="image/*">
+   <button class="btn primary" id="addBtn">영화 추가 +</button>
+  </div>
+ </section>
+ <footer>배치 내용은 이 브라우저에 자동 저장됩니다. 다른 기기와 자동 동기화되지는 않습니다.<br>이미지 저장은 현재 화면을 PNG 파일로 내보냅니다. 링크 공유에는 별도 서버가 필요합니다.</footer>
+</main>
+<div class="toast" id="toast"></div><div id="dragGhost"></div>
+<script>
+(() => {
+const KEY='myMovieTierList_v1';
+const defaults=[
+ ['기생충','', '#222','#b33b35'],['인터스텔라','', '#101d3b','#b77d57'],['라라랜드','', '#263f75','#e6a24a'],
+ ['쇼생크 탈출','', '#263e55','#b8a27a'],['타이타닉','', '#173d60','#8db5c7'],['올드보이','', '#171717','#9d3838'],
+ ['센과 치히로의 행방불명','', '#244d4a','#e2a65b'],['매트릭스','', '#071d18','#3c9b66'],['겨울왕국','', '#477c9d','#c5e5f4'],
+ ['극한직업','', '#813f2d','#e7b45c'],['헤어질 결심','', '#1e334b','#9c6e76'],['위플래쉬','', '#301b1c','#bd543f'],
+ ['인셉션','', '#29334a','#9d8061'],['토이 스토리','', '#25638b','#e6b64e'],['범죄도시','', '#262626','#ad443d']
+].map((x,i)=>({id:'d'+i,title:x[0],url:'',c1:x[2],c2:x[3],tier:null}));
+let movies=[];
+try{movies=JSON.parse(localStorage.getItem(KEY))||[]}catch(e){}
+if(!movies.length) movies=defaults;
+const tiers=document.getElementById('tiers'),library=document.getElementById('libraryGrid'),toastEl=document.getElementById('toast');
+let uploadedData='',dragId=null,pointerDrag=false;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(movies))}catch(e){toast('저장 공간이 부족합니다. 이미지 용량을 줄여 다시 추가해 주세요.');}}
+function toast(s){toastEl.textContent=s;toastEl.classList.add('show');setTimeout(()=>toastEl.classList.remove('show'),2200)}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function card(m){const el=document.createElement('div');el.className='movie';el.dataset.id=m.id;el.innerHTML=`<div class="poster" style="--c1:${m.c1||'#26334a'};--c2:${m.c2||'#a65b48'}">${m.url?`<img src="${esc(m.url)}" alt="" onerror="this.remove()">`:''}<span>${esc(m.title)}</span></div><div class="movie-name">${esc(m.title)}</div><button class="remove" title="영화 삭제" aria-label="영화 삭제">×</button>`;
+ el.querySelector('.remove').addEventListener('click',e=>{e.stopPropagation();movies=movies.filter(x=>x.id!==m.id);save();render()});
+ el.addEventListener('pointerdown',startDrag);return el}
+function render(){document.querySelectorAll('.tier-content').forEach(x=>x.innerHTML='');library.innerHTML='';
+ movies.forEach(m=>{const el=card(m);if(m.tier){const dest=document.querySelector(`.tier[data-tier="${m.tier}"] .tier-content`);dest.appendChild(el)}else library.appendChild(el)});
+ document.querySelectorAll('.tier-content').forEach(x=>{if(!x.children.length)x.innerHTML='<span class="empty">영화를 여기에 놓으세요</span>'});
+ document.getElementById('countText').textContent=`전체 ${movies.length}편 · 미배치 ${movies.filter(m=>!m.tier).length}편`;save()}
+function startDrag(e){if(e.target.closest('.remove'))return;e.preventDefault();const el=e.currentTarget;dragId=el.dataset.id;pointerDrag=true;el.classList.add('dragging');const ghost=document.getElementById('dragGhost');ghost.innerHTML=el.querySelector('.poster').outerHTML;ghost.style.display='block';moveGhost(e);document.addEventListener('pointermove',onMove);document.addEventListener('pointerup',onUp,{once:true})}
+function moveGhost(e){const g=document.getElementById('dragGhost');g.style.left=e.clientX+'px';g.style.top=e.clientY+'px'}
+function onMove(e){if(!pointerDrag)return;moveGhost(e);document.querySelectorAll('.tier').forEach(t=>{const r=t.getBoundingClientRect();t.classList.toggle('over',e.clientY>=r.top&&e.clientY<=r.bottom&&e.clientX>=r.left&&e.clientX<=r.right)})}
+function onUp(e){document.removeEventListener('pointermove',onMove);document.querySelectorAll('.movie.dragging').forEach(x=>x.classList.remove('dragging'));document.querySelectorAll('.tier').forEach(x=>x.classList.remove('over'));document.getElementById('dragGhost').style.display='none';if(!pointerDrag)return;pointerDrag=false;
+ const tier=document.elementFromPoint(e.clientX,e.clientY)?.closest('.tier');const m=movies.find(x=>x.id===dragId);if(m){m.tier=tier?tier.dataset.tier:null;save();render()}dragId=null}
+document.getElementById('addBtn').onclick=()=>{const title=document.getElementById('titleInput').value.trim(),url=document.getElementById('urlInput').value.trim();if(!title){toast('영화 제목을 입력해 주세요.');return}if(url&&!/^https?:\/\//i.test(url)&&!url.startsWith('data:image/')){toast('이미지 주소는 http:// 또는 https://로 시작해야 합니다.');return}
+ movies.push({id:'m'+Date.now(),title,url:uploadedData||url,c1:'#283d58',c2:'#a35c4d',tier:null});uploadedData='';document.getElementById('titleInput').value='';document.getElementById('urlInput').value='';document.getElementById('fileInput').value='';save();render();toast('영화를 보관함에 추가했습니다.')};
+document.getElementById('fileInput').onchange=e=>{const f=e.target.files[0];if(!f)return;if(f.size>2*1024*1024){toast('이미지는 2MB 이하 파일을 선택해 주세요.');e.target.value='';return}const reader=new FileReader();reader.onload=()=>{uploadedData=reader.result;document.getElementById('urlInput').value='파일 이미지가 선택되었습니다.'};reader.readAsDataURL(f)};
+document.getElementById('resetBtn').onclick=()=>{if(confirm('티어 배치를 초기화하고 기본 영화 목록으로 되돌릴까요?')){movies=defaults.map(x=>({...x}));save();render();toast('초기화했습니다.')}};
+function drawCanvas(){const w=1200,rowH=154,top=120,h=top+rowH*5+45,canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const c=canvas.getContext('2d');c.fillStyle='#10131b';c.fillRect(0,0,w,h);c.fillStyle='#f6c85f';c.font='bold 15px sans-serif';c.fillText('MY PERSONAL MOVIE ARCHIVE',42,40);c.fillStyle='#fff';c.font='bold 36px sans-serif';c.fillText('나의 영화 티어리스트',42,88);
+ const colors={S:'#ff6565',A:'#ffad60',B:'#f2d46b',C:'#78c99a',D:'#77a9ef'};
+ ['S','A','B','C','D'].forEach((t,i)=>{let y=top+i*rowH;c.fillStyle='#202736';round(c,32,y,w-64,rowH-10,12);c.fillStyle=colors[t];round(c,32,y,86,rowH-10,10);c.fillStyle='#171717';c.font='bold 34px sans-serif';c.textAlign='center';c.fillText(t,75,y+68);c.textAlign='left';
+ const list=movies.filter(m=>m.tier===t);list.forEach((m,j)=>{let x=140+j*108;if(x+82>w-30)return;c.fillStyle=m.c1||'#26334a';round(c,x,y+12,82,104,7);c.fillStyle='#fff';c.font='bold 10px sans-serif';c.textAlign='center';wrapText(c,m.title,x+41,y+59,70,14);c.textAlign='left'})});
+ const un=movies.filter(m=>!m.tier);c.fillStyle='#a8b0c0';c.font='13px sans-serif';c.fillText(`미배치 영화 ${un.length}편`,42,h-16);return canvas}
+function round(c,x,y,w,h,r){c.beginPath();c.roundRect(x,y,w,h,r);c.fill()}
+function wrapText(c,s,x,y,max,line){let words=Array.from(s);let out='',lines=[];for(const ch of words){if(c.measureText(out+ch).width>max&&out){lines.push(out);out=ch}else out+=ch}if(out)lines.push(out);lines.slice(0,4).forEach((v,i)=>c.fillText(v,x,y+i*line))}
+document.getElementById('downloadBtn').onclick=()=>{try{const a=document.createElement('a');a.download='나의-영화-티어리스트.png';a.href=drawCanvas().toDataURL('image/png');a.click();toast('PNG 이미지로 저장했습니다.')}catch(e){toast('이미지를 저장하지 못했습니다. 외부 이미지 URL을 확인해 주세요.')}};
+document.getElementById('shareBtn').onclick=async()=>{const text='나의 영화 티어리스트\n'+['S','A','B','C','D'].map(t=>t+': '+movies.filter(m=>m.tier===t).map(m=>m.title).join(', ')).join('\n');if(navigator.share){try{await navigator.share({title:'나의 영화 티어리스트',text})}catch(e){}}else{try{await navigator.clipboard.writeText(text);toast('티어리스트 목록을 클립보드에 복사했습니다.')}catch(e){toast('이 브라우저에서는 공유 기능을 지원하지 않습니다.')}}};
+render();
+})();
+</script>
+</body>
+</html>
