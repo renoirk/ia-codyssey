@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>약 복용 일지</title>
+<style>
+:root{
+  --bg:#f3f6f5; --card:#ffffff; --ink:#18282a; --muted:#52666a; --line:#d3dedc;
+  --pri:#0e6b63; --pri-d:#0a524c; --pri-ink:#ffffff;
+  --done:#14632f; --done-bg:#dcf4e2;
+  --none:#3b4a66; --none-bg:#e8edf6;
+  --over:#a31616; --over-bg:#fde8e8;
+  --part:#7a4f00; --part-bg:#fff1cc;
+  --empty-bg:#eef1f1;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;padding-bottom:84px;word-break:keep-all}
+.top{background:var(--pri);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:20}
+.top h1{margin:0;font-size:20px;font-weight:700}
+#storageWarn{margin-top:6px;background:#fff4d6;color:#5a3b00;border-radius:8px;padding:8px 10px;font-size:14px}
+main{max-width:680px;margin:0 auto;padding:14px 14px 24px}
+h2{font-size:21px;margin:6px 0 10px}
+h3{font-size:18px;margin:20px 0 8px}
+h4{margin:0;font-size:16px}
+.hint{color:var(--muted);font-size:14.5px;margin:4px 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+button{font:inherit;cursor:pointer}
+.btn{min-height:44px;padding:8px 14px;border-radius:10px;border:1.5px solid var(--pri);background:#fff;color:var(--pri-d);font-weight:600}
+.btn.pri{background:var(--pri);color:var(--pri-ink)}
+.btn.warn{border-color:var(--over);color:var(--over)}
+.btn.sm{min-height:40px;padding:6px 12px;font-size:15px}
+.btn.big{width:100%;margin-bottom:14px}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,.tab:focus-visible,.cell:focus-visible{outline:3px solid #f0a500;outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+input[type=text],input[type=date],input[type=time],textarea{font:inherit;width:100%;padding:10px 12px;border:1.5px solid #9db3b0;border-radius:10px;background:#fff;color:var(--ink);min-height:44px}
+textarea{min-height:76px;resize:vertical}
+input[type=time]{width:auto;min-width:140px}
+label.field{display:block;margin:12px 0 4px;font-weight:600}
+label.field .req{color:var(--over);font-weight:700}
+.chk{display:inline-flex;align-items:center;gap:8px;min-height:44px}
+.chk input{width:22px;height:22px}
+.err{color:var(--over);font-size:15px;margin-top:6px;font-weight:600}
+.errbox{background:var(--over-bg);border:1.5px solid var(--over);color:var(--over);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-weight:600}
+.errbox ul{margin:4px 0 0;padding-left:20px}
+/* 요약 */
+.summary{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 12px}
+.pill{padding:6px 12px;border-radius:999px;font-weight:700;font-size:16px}
+.pill.d{background:var(--done-bg);color:var(--done)}
+.pill.r{background:var(--none-bg);color:var(--none)}
+.pill.t{background:#fff;border:1px solid var(--line);color:var(--muted);font-weight:600}
+/* 목록 */
+ul.list,ul.mini{list-style:none;margin:0;padding:0}
+.item{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-left:7px solid var(--none);border-radius:12px;padding:12px;margin-bottom:10px}
+.item.is-done{border-left-color:#1f9d4d;background:#f7fcf8}
+.item.is-over{border-left-color:var(--over);background:#fff8f8;border-color:#e9b3b3;border-left-color:var(--over)}
+.itime{font-size:21px;font-weight:800;min-width:62px;font-variant-numeric:tabular-nums}
+.ibody{flex:1;min-width:0}
+.iname{font-weight:700;font-size:18px;overflow-wrap:anywhere}
+.dose{font-weight:500;color:var(--muted);font-size:16px}
+.imeta{margin:4px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.badge{display:inline-block;padding:3px 10px;border-radius:8px;font-weight:700;font-size:14.5px}
+.b-done{background:var(--done-bg);color:var(--done)}
+.b-none{background:var(--none-bg);color:var(--none)}
+.b-over{background:var(--over-bg);color:var(--over)}
+.actual{font-size:15px;color:var(--ink)}
+.note{font-size:15px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere;white-space:pre-wrap}
+.note.memo{color:#27474a}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.editor{background:#f1f7f6;border:1.5px dashed var(--pri);border-radius:10px;padding:10px;margin-top:8px}
+.etitle{font-weight:700;margin-bottom:6px}
+.prnbox{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.prnbox .iname{margin-bottom:6px}
+/* 탭 */
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:#fff;border-top:1px solid var(--line);z-index:30}
+.tab{flex:1;min-height:64px;border:0;background:#fff;color:var(--muted);font-weight:700;font-size:15px;padding:6px 2px;border-top:4px solid transparent}
+.tab .ic{display:block;font-size:20px;line-height:1.1}
+.tab[aria-current=page]{color:var(--pri-d);border-top-color:var(--pri);background:#eaf4f2}
+/* 알림 */
+#alerts{position:fixed;top:0;left:0;right:0;z-index:100;max-height:70vh;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.alert{pointer-events:auto;max-width:640px;width:100%;margin:0 auto;background:#fff8e1;border:3px solid #e29b00;border-radius:14px;padding:12px 14px;box-shadow:0 6px 20px rgba(0,0,0,.28)}
+.atitle{font-weight:800;font-size:19px;color:#6b4300}
+.alert ul{margin:8px 0;padding-left:20px}
+.alert li.a-done{text-decoration:line-through;color:var(--muted)}
+.ahint{font-size:14.5px;color:#5a4a20;margin:4px 0 10px}
+/* 약 관리 */
+.med .mn{font-size:19px;font-weight:800;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{background:var(--none-bg);color:var(--none);border-radius:8px;padding:2px 10px;font-weight:700;font-size:15px}
+.mstate{display:inline-block;font-weight:700;font-size:14.5px;padding:2px 10px;border-radius:8px;background:var(--done-bg);color:var(--done)}
+.mstate.off{background:var(--empty-bg);color:var(--muted)}
+.trow{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.trow select{font:inherit;min-height:46px;padding:6px 8px;border:1.5px solid #9db3b0;border-radius:10px;background:#fff;color:var(--ink)}
+.trow .sel-ap{min-width:96px}.trow .sel-h,.trow .sel-m{min-width:78px}
+.trow .colon{font-weight:800;font-size:20px}
+.seg{display:flex;gap:6px;margin-bottom:12px}
+.seg button{flex:1;min-height:44px;border-radius:10px;border:1.5px solid var(--line);background:#fff;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed=true]{background:var(--pri);border-color:var(--pri);color:#fff}
+.radios{display:flex;gap:16px;flex-wrap:wrap}
+.radios label{display:inline-flex;gap:8px;align-items:center;min-height:44px;font-weight:600}
+.radios input{width:22px;height:22px}
+/* 달력 */
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.nav .t{font-weight:800;font-size:18px;text-align:center;flex:1}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.wd{text-align:center;font-weight:700;font-size:14px;color:var(--muted);padding:2px 0}
+.cell{min-height:70px;border-radius:8px;border:1.5px solid transparent;padding:3px 2px;text-align:center;font-size:12px;line-height:1.25;background:var(--empty-bg);color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+.cell .dn{font-weight:800;font-size:15px;color:var(--ink)}
+.cell.c-all{background:var(--done-bg);color:var(--done)}
+.cell.c-part{background:var(--part-bg);color:var(--part)}
+.cell.c-zero{background:var(--over-bg);color:var(--over)}
+.cell.fut{background:#fafbfb;color:#9aa8a8;border:1px dashed var(--line)}
+.cell.fut .dn{color:#9aa8a8}
+.cell.today{border-color:var(--ink)}
+.cell.sel{outline:3px solid var(--pri);outline-offset:1px}
+.cell .cs{font-weight:700;word-break:keep-all}
+.cell:disabled{cursor:default}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:13.5px;color:var(--muted);margin:10px 0 14px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--empty-bg)}
+.legend .l1::before{background:var(--done-bg);border:1px solid var(--done)}
+.legend .l2::before{background:var(--part-bg);border:1px solid var(--part)}
+.legend .l3::before{background:var(--over-bg);border:1px solid var(--over)}
+.dayblock{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.dayblock .dh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px}
+.sum{font-weight:700;color:var(--muted);font-size:15px}
+.mini li{padding:6px 0;border-top:1px solid #e6eceb;font-size:16px;overflow-wrap:anywhere}
+.mini li:first-child{border-top:0}
+.mini .t{font-weight:800;margin-right:6px;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);padding:12px 4px}
+noscript{display:block;padding:16px;font-weight:700}
+</style>
+</head>
+<body>
+<div id="alerts" aria-live="assertive"></div>
+<header class="top">
+  <h1>약 복용 일지</h1>
+  <div id="storageWarn" role="alert" hidden></div>
+</header>
+<noscript>이 페이지는 자바스크립트가 켜져 있어야 사용할 수 있습니다.</noscript>
+<main id="view"></main>
+<nav class="tabs" aria-label="화면 이동">
+  <button class="tab" data-act="tab" data-tab="today"><span class="ic" aria-hidden="true">💊</span>오늘의 복용</button>
+  <button class="tab" data-act="tab" data-tab="meds"><span class="ic" aria-hidden="true">📋</span>약 등록·관리</button>
+  <button class="tab" data-act="tab" data-tab="past"><span class="ic" aria-hidden="true">📅</span>지난 기록</button>
+  <button class="tab" data-act="tab" data-tab="memo"><span class="ic" aria-hidden="true">📝</span>메모</button>
+</nav>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ===== 시간·날짜 도구 ===== */
+  var KEY = 'medDiary.v1';
+  var offset = 0; // 개발 검증용 기준 시각 보정값(사용자 화면에는 노출하지 않음)
+  function now() { return new Date(Date.now() + offset); }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function hm(d) { return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function today() { return ymd(now()); }
+  function parseYmd(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function addDays(s, n) { var d = parseYmd(s); d.setDate(d.getDate() + n); return ymd(d); }
+  var WD = ['일', '월', '화', '수', '목', '금', '토'];
+  function labelDate(s) { var d = parseYmd(s); return d.getFullYear() + '년 ' + (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + WD[d.getDay()] + ')'; }
+  function shortDate(s) { var d = parseYmd(s); return (d.getMonth() + 1) + '월 ' + d.getDate() + '일 (' + WD[d.getDay()] + ')'; }
+  function mondayOf(s) { var d = parseYmd(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymd(d); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  /* ===== 복용 시각 입력(오전/오후) 도구 ===== */
+  function toParts(t) {
+    if (!t) return { ap: '', h: '', m: '' };
+    var p = t.split(':'), H = +p[0];
+    return { ap: H < 12 ? 'AM' : 'PM', h: String(H % 12 === 0 ? 12 : H % 12), m: p[1] };
+  }
+  function fromParts(q) {
+    if (!q || !q.ap || !q.h || !q.m) return '';
+    var H = (+q.h) % 12 + (q.ap === 'PM' ? 12 : 0);
+    return pad(H) + ':' + q.m;
+  }
+  function koTime(t) {
+    var q = toParts(t);
+    return (q.ap === 'AM' ? '오전 ' : '오후 ') + q.h + ':' + q.m;
+  }
+  function timeSelects(i, q) {
+    var h = '<select class="sel-ap" data-t="ap" data-i="' + i + '" aria-label="복용 시각 ' + (i + 1) + ' 오전·오후">' +
+      '<option value="">오전/오후</option><option value="AM"' + (q.ap === 'AM' ? ' selected' : '') + '>오전</option><option value="PM"' + (q.ap === 'PM' ? ' selected' : '') + '>오후</option></select>';
+    h += '<select class="sel-h" data-t="h" data-i="' + i + '" aria-label="복용 시각 ' + (i + 1) + ' 시"><option value="">시</option>';
+    for (var k = 1; k <= 12; k++) h += '<option value="' + k + '"' + (q.h === String(k) ? ' selected' : '') + '>' + k + '시</option>';
+    h += '</select><span class="colon" aria-hidden="true">:</span><select class="sel-m" data-t="m" data-i="' + i + '" aria-label="복용 시각 ' + (i + 1) + ' 분"><option value="">분</option>';
+    for (var j = 0; j < 60; j++) h += '<option value="' + pad(j) + '"' + (q.m === pad(j) ? ' selected' : '') + '>' + pad(j) + '분</option>';
+    return h + '</select>';
+  }
+
+  /* ===== 저장소 ===== */
+  var db = { meds: [], recs: {}, prn: [], dayMemo: {}, seq: 1 };
+  var storageOk = true;
+  function warnStorage() {
+    var w = document.getElementById('storageWarn');
+    w.textContent = '이 브라우저에서는 기록을 저장할 수 없습니다. 페이지를 닫으면 입력한 내용이 사라질 수 있습니다.';
+    w.hidden = false;
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) {
+        var o = JSON.parse(raw);
+        if (o && Array.isArray(o.meds)) {
+          db.meds = o.meds; db.recs = o.recs || {}; db.prn = o.prn || []; db.dayMemo = o.dayMemo || {}; db.seq = o.seq || 1;
+        }
+      }
+    } catch (e) { storageOk = false; warnStorage(); }
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(db)); }
+    catch (e) { storageOk = false; warnStorage(); }
+  }
+  function newId() { return 'x' + Date.now().toString(36) + (db.seq++); }
+
+  /* ===== 일정 계산 ===== */
+  function medById(id) { for (var i = 0; i < db.meds.length; i++) if (db.meds[i].id === id) return db.meds[i]; return null; }
+  function verAt(m, d) {
+    var v = null;
+    for (var i = 0; i < m.versions.length; i++) if (m.versions[i].from <= d) v = m.versions[i];
+    return v || m.versions[0];
+  }
+  function activeOn(m, d) {
+    if (d < m.start) return false;
+    if (m.end && d > m.end) return false;
+    if (m.stopFrom && d >= m.stopFrom) return false;
+    return true;
+  }
+  function cmpItem(a, b) { return a.time < b.time ? -1 : a.time > b.time ? 1 : (a.name < b.name ? -1 : a.name > b.name ? 1 : 0); }
+  function dayItems(d) {
+    var items = [], seen = {};
+    db.meds.forEach(function (m) {
+      if (m.type !== 'regular' || !activeOn(m, d)) return;
+      var v = verAt(m, d);
+      v.times.forEach(function (t) {
+        var k = m.id + '|' + d + '|' + t, r = db.recs[k] || null, taken = !!(r && r.taken), sn = taken && r.snap ? r.snap : null;
+        seen[k] = 1;
+        items.push({ key: k, medId: m.id, date: d, time: t, name: sn ? sn.name : v.name, dose: sn ? sn.dose : v.dose,
+          regMemo: sn ? (sn.memo || '') : (v.memo || ''), rec: r, taken: taken, extra: false });
+      });
+    });
+    Object.keys(db.recs).forEach(function (k) {
+      if (seen[k]) return;
+      var p = k.split('|');
+      if (p[1] !== d) return;
+      var r = db.recs[k];
+      if (!r.taken) return;
+      var sn = r.snap || {}, m = medById(p[0]);
+      items.push({ key: k, medId: p[0], date: d, time: p[2], name: sn.name || (m ? verAt(m, d).name : '(알 수 없는 약)'),
+        dose: sn.dose || '', regMemo: sn.memo || '', rec: r, taken: true, extra: true });
+    });
+    items.sort(cmpItem);
+    return items;
+  }
+  function sumOf(items) {
+    var done = items.filter(function (i) { return i.taken; }).length;
+    return { total: items.length, done: done, remain: items.length - done };
+  }
+  function dayPrn(d) {
+    return db.prn.filter(function (x) { return x.date === d; }).sort(function (a, b) {
+      var x = a.actual || '99:99', y = b.actual || '99:99';
+      return x < y ? -1 : x > y ? 1 : 0;
+    });
+  }
+  function prnMeds(d) { return db.meds.filter(function (m) { return m.type === 'prn' && activeOn(m, d); }); }
+  function snapOf(it) { return { name: it.name, dose: it.dose, time: it.time, memo: it.regMemo }; }
+  function findItem(d, key) {
+    var a = dayItems(d);
+    for (var i = 0; i < a.length; i++) if (a[i].key === key) return a[i];
+    return null;
+  }
+
+  /* ===== 기록 변경 ===== */
+  function setTaken(key, snap, actual) {
+    var r = db.recs[key] || (db.recs[key] = { taken: false, actual: null, memo: '' });
+    r.taken = true; r.actual = actual; r.snap = snap; save();
+  }
+  function untake(key) {
+    var r = db.recs[key];
+    if (!r) return;
+    r.taken = false; r.actual = null; delete r.snap;
+    if (!r.memo) delete db.recs[key];
+    save();
+  }
+  function setMemo(key, text) {
+    var r = db.recs[key];
+    if (!r) { if (!text) return; r = db.recs[key] = { taken: false, actual: null, memo: '' }; }
+    r.memo = text;
+    if (!text && !r.taken) delete db.recs[key];
+    save();
+  }
+
+  /* ===== 화면 상태 ===== */
+  var ui = {
+    tab: 'today', pastView: 'cal', calMonth: null, pastDate: null, weekStart: null, memoDate: null,
+    editor: null, memoOpen: {}, viewDate: null, form: null, formErr: [], stopFor: null, stopDate: '', stopErr: ''
+  };
+  var lastSig = '', renderedDate = '';
+
+  /* ===== 공통 조각 ===== */
+  function badge(it, od) {
+    if (it.taken) return '<span class="badge b-done">✔ 복용 완료</span>';
+    var s = '<span class="badge b-none">○ 미복용</span>';
+    if (od) s += '<span class="badge b-over">! 시각 지남</span>';
+    return s;
+  }
+  function actualText(r) { return r && r.actual ? '실제 복용 ' + r.actual : '실제 복용 시각 미상'; }
+  function editorHtml(title, time, unk) {
+    return '<div class="editor"><div class="etitle">' + esc(title) + '</div>' +
+      '<label class="field" style="margin-top:0" for="ed-time">실제 복용 시각</label>' +
+      '<input type="time" id="ed-time" value="' + esc(time) + '"' + (unk ? ' disabled' : '') + '>' +
+      '<div><label class="chk"><input type="checkbox" id="ed-unk"' + (unk ? ' checked' : '') + '> 시각 미상</label></div>' +
+      '<div class="err" id="ed-err" role="alert"></div>' +
+      '<div class="row" style="margin-top:6px"><button class="btn pri sm" data-act="ed-save">저장</button>' +
+      '<button class="btn sm" data-act="ed-cancel">취소</button></div></div>';
+  }
+  function memoArea(attr, id, val) {
+    return '<textarea ' + attr + '="' + esc(id) + '" placeholder="메모를 입력하세요" aria-label="메모">' + esc(val || '') + '</textarea>';
+  }
+
+  function itemRow(it, date) {
+    var isToday = date === today(), od = isToday && !it.taken && it.time <= hm(now());
+    var cls = 'item ' + (it.taken ? 'is-done' : (od ? 'is-over' : 'is-none'));
+    var memo = it.rec && it.rec.memo ? it.rec.memo : '';
+    var open = !!ui.memoOpen[it.key];
+    var ed = ui.editor && ui.editor.kind === 's' && ui.editor.key === it.key ? ui.editor : null;
+    var d = ' data-key="' + esc(it.key) + '" data-date="' + date + '"';
+    var h = '<li class="' + cls + '"><div class="itime">' + it.time + '</div><div class="ibody">';
+    h += '<div class="iname">' + esc(it.name) + ' <span class="dose">' + esc(it.dose) + '</span></div>';
+    h += '<div class="imeta">' + badge(it, od) + (it.taken ? '<span class="actual">' + actualText(it.rec) + '</span>' : '') + '</div>';
+    if (it.regMemo) h += '<div class="note">복용 안내: ' + esc(it.regMemo) + '</div>';
+    if (memo && !open) h += '<div class="note memo">메모: ' + esc(memo) + '</div>';
+    if (open) h += memoArea('data-memo-key', it.key, memo);
+    if (ed) h += editorHtml(ed.mode === 'check' ? '실제로 먹은 시각 입력' : '실제 복용 시각 수정',
+      ed.mode === 'edit' && it.rec && it.rec.actual ? it.rec.actual : '', ed.mode === 'edit' && it.rec && it.rec.actual == null);
+    h += '<div class="acts">';
+    if (!it.taken) h += isToday ? '<button class="btn pri sm" data-act="take-now"' + d + '>복용 체크</button>'
+      : '<button class="btn pri sm" data-act="open-check"' + d + '>복용 기록</button>';
+    else h += '<button class="btn sm" data-act="open-edit"' + d + '>시각 수정</button><button class="btn sm warn" data-act="untake"' + d + '>체크 취소</button>';
+    h += '<button class="btn sm" data-act="toggle-memo" data-mk="' + esc(it.key) + '">' + (open ? '메모 닫기' : (memo ? '메모 수정' : '메모')) + '</button>';
+    h += '</div></div></li>';
+    return h;
+  }
+
+  function prnRow(p, date) {
+    var open = !!ui.memoOpen['p:' + p.id];
+    var ed = ui.editor && ui.editor.kind === 'p' && ui.editor.id === p.id;
+    var h = '<li class="item is-done"><div class="itime">' + (p.actual || '미상') + '</div><div class="ibody">';
+    h += '<div class="iname">' + esc(p.snap.name) + ' <span class="dose">' + esc(p.snap.dose) + '</span></div>';
+    h += '<div class="imeta"><span class="badge b-done">✔ 복용 기록</span><span class="actual">' + actualText(p) + '</span></div>';
+    if (p.memo && !open) h += '<div class="note memo">메모: ' + esc(p.memo) + '</div>';
+    if (open) h += memoArea('data-memo-prn', p.id, p.memo);
+    if (ed) h += editorHtml('실제 복용 시각 수정', p.actual || '', p.actual == null);
+    h += '<div class="acts"><button class="btn sm" data-act="prn-open-edit" data-id="' + p.id + '">시각 수정</button>' +
+      '<button class="btn sm warn" data-act="prn-del" data-id="' + p.id + '">기록 취소</button>' +
+      '<button class="btn sm" data-act="toggle-memo" data-mk="p:' + p.id + '">' + (open ? '메모 닫기' : (p.memo ? '메모 수정' : '메모')) + '</button></div>';
+    h += '</div></li>';
+    return h;
+  }
+
+  function prnSection(date) {
+    var meds = prnMeds(date), recs = dayPrn(date), isToday = date === today();
+    if (!meds.length && !recs.length) return '';
+    var h = '<h3>필요할 때 복용</h3><p class="hint">먹을 때마다 따로 기록합니다. 위의 완료·남은 횟수에는 포함되지 않습니다.</p>';
+    meds.forEach(function (m) {
+      var v = verAt(m, date);
+      var ed = ui.editor && ui.editor.kind === 'pn' && ui.editor.medId === m.id && ui.editor.date === date;
+      h += '<div class="prnbox"><div class="iname">' + esc(v.name) + ' <span class="dose">' + esc(v.dose) + '</span></div>';
+      if (v.memo) h += '<div class="note">복용 안내: ' + esc(v.memo) + '</div>';
+      if (ed) h += editorHtml('실제로 먹은 시각 입력', '', false);
+      h += '<div class="acts">' + (isToday
+        ? '<button class="btn pri sm" data-act="prn-now" data-id="' + m.id + '">지금 복용 기록</button>'
+        : '<button class="btn pri sm" data-act="prn-open-new" data-id="' + m.id + '" data-date="' + date + '">복용 기록 추가</button>') + '</div></div>';
+    });
+    if (recs.length) {
+      h += '<ul class="list">' + recs.map(function (p) { return prnRow(p, date); }).join('') + '</ul>';
+    }
+    return h;
+  }
+
+  function dayPanel(date, withDayMemo) {
+    var items = dayItems(date), s = sumOf(items), h = '';
+    h += '<div class="summary"><span class="pill d">완료 ' + s.done + '회</span><span class="pill r">남음 ' + s.remain + '회</span><span class="pill t">예정 총 ' + s.total + '회</span></div>';
+    if (items.length) h += '<ul class="list">' + items.map(function (it) { return itemRow(it, date); }).join('') + '</ul>';
+    else if (!db.meds.length) h += '<div class="empty">등록된 약이 없습니다. ‘약 등록·관리’ 화면에서 약을 등록해 주세요.</div>';
+    else h += '<div class="empty">이 날 예정된 정기 복용이 없습니다.</div>';
+    h += prnSection(date);
+    if (withDayMemo) {
+      h += '<h3>하루 메모 (몸 상태 등)</h3>' + memoArea('data-day-memo', date, db.dayMemo[date] || '');
+    }
+    return h;
+  }
+
+  /* ===== 화면: 오늘 ===== */
+  function futureRow(it) {
+    var h = '<li class="item is-none"><div class="itime">' + it.time + '</div><div class="ibody">';
+    h += '<div class="iname">' + esc(it.name) + ' <span class="dose">' + esc(it.dose) + '</span></div>';
+    h += '<div class="imeta"><span class="badge b-none">◔ 예정</span></div>';
+    if (it.regMemo) h += '<div class="note">복용 안내: ' + esc(it.regMemo) + '</div>';
+    return h + '</div></li>';
+  }
+  function renderToday() {
+    var td = today(), d = ui.viewDate && ui.viewDate !== td ? ui.viewDate : td, isToday = d === td, fut = d > td;
+    var title = isToday ? '오늘의 복용' : (fut ? '예정된 복용' : '지난 복용');
+    var h = '<section><h2>' + title + '</h2>';
+    h += '<div class="nav"><button class="btn sm" data-act="day-prev" aria-label="하루 전">◀</button>' +
+      '<input type="date" id="view-date" value="' + d + '" aria-label="확인할 날짜 선택" style="flex:1;text-align:center">' +
+      '<button class="btn sm" data-act="day-next" aria-label="다음 날">▶</button></div>';
+    h += '<div class="row" style="margin-bottom:8px"><span class="hint" style="font-size:16px;margin:0;flex:1">' + labelDate(d) + '</span>' +
+      (isToday ? '' : '<button class="btn sm" data-act="day-today">오늘로 돌아가기</button>') + '</div>';
+    if (!fut) return h + dayPanel(d, false) + '</section>';
+    var items = dayItems(d), pm = prnMeds(d);
+    h += '<p class="hint">아직 오지 않은 날입니다. 예정된 복용만 확인할 수 있고, 복용 체크와 메모는 그날이 되면 할 수 있습니다.</p>';
+    h += '<div class="summary"><span class="pill t">예정 총 ' + items.length + '회</span></div>';
+    if (items.length) h += '<ul class="list">' + items.map(futureRow).join('') + '</ul>';
+    else h += '<div class="empty">' + (db.meds.length ? '이 날 예정된 정기 복용이 없습니다.' : '등록된 약이 없습니다. ‘약 등록·관리’ 화면에서 약을 등록해 주세요.') + '</div>';
+    if (pm.length) {
+      h += '<h3>필요할 때 복용하는 약</h3><p class="hint">예정 횟수에는 포함되지 않습니다.</p>';
+      pm.forEach(function (m) { var v = verAt(m, d); h += '<div class="prnbox"><div class="iname">' + esc(v.name) + ' <span class="dose">' + esc(v.dose) + '</span></div></div>'; });
+    }
+    return h + '</section>';
+  }
+
+  /* ===== 화면: 약 등록·관리 ===== */
+  function medState(m) {
+    var td = today();
+    if (m.stopFrom && m.stopFrom <= td) return ['중단됨 (' + m.stopFrom + '부터)', true];
+    if (m.end && m.end < td) return ['종료됨', true];
+    if (m.start > td) return ['시작 전', true];
+    return ['복용 중', false];
+  }
+  function renderMeds() {
+    if (ui.form) return renderForm();
+    var td = today();
+    var h = '<section><h2>약 등록·관리</h2><button class="btn pri big" data-act="med-new">+ 새 약 등록</button>';
+    if (!db.meds.length) h += '<div class="empty">아직 등록된 약이 없습니다. 위 버튼으로 약을 등록해 주세요.</div>';
+    db.meds.forEach(function (m) {
+      var cur = verAt(m, td < m.start ? m.start : td), st = medState(m);
+      var stoppedNow = m.stopFrom && m.stopFrom <= td;
+      h += '<div class="card med"><div class="mn">' + esc(cur.name) + '</div>';
+      h += '<div><span class="mstate' + (st[1] ? ' off' : '') + '">' + esc(st[0]) + '</span> <span class="dose">' + (m.type === 'prn' ? '필요할 때 복용' : '정해진 시각 복용') + '</span></div>';
+      h += '<div class="note">1회 복용량: ' + esc(cur.dose) + '</div>';
+      if (m.type === 'regular') h += '<div class="chips">' + cur.times.map(function (t) { return '<span class="chip">' + t + '</span>'; }).join('') + '</div>';
+      h += '<div class="note">기간: ' + m.start + ' ~ ' + (m.end || '종료일 없음') + '</div>';
+      if (cur.memo) h += '<div class="note">복용 관련 메모: ' + esc(cur.memo) + '</div>';
+      m.versions.forEach(function (v) {
+        if (v.from > td && v.from > m.start) h += '<div class="note">변경 예정 ' + v.from + '부터: ' + esc(v.name) + ' ' + esc(v.dose) + (m.type === 'regular' ? ' · ' + v.times.join(', ') : '') + '</div>';
+      });
+      if (m.stopFrom && m.stopFrom > td) h += '<div class="note">중단 예정: ' + m.stopFrom + '부터</div>';
+      if (ui.stopFor === m.id) {
+        h += '<div class="editor"><div class="etitle">중단 적용일 선택</div>' +
+          '<p class="hint">선택한 날짜부터 예정 목록·횟수에서 제외됩니다. 오늘을 선택하면 아직 복용하지 않은 예정 건만 제외되고, 이미 복용 완료한 건과 지난 기록은 유지됩니다.</p>' +
+          '<input type="date" id="stop-date" min="' + td + '" value="' + esc(ui.stopDate) + '">' +
+          (ui.stopErr ? '<div class="err" role="alert">' + esc(ui.stopErr) + '</div>' : '') +
+          '<div class="row" style="margin-top:8px"><button class="btn warn sm" data-act="med-stop-save">이 날짜부터 중단</button><button class="btn sm" data-act="med-stop-cancel">취소</button></div></div>';
+      } else {
+        h += '<div class="acts">';
+        if (!stoppedNow) h += '<button class="btn sm" data-act="med-edit" data-id="' + m.id + '">수정</button><button class="btn sm warn" data-act="med-stop" data-id="' + m.id + '">복용 중단</button>';
+        h += '</div>';
+      }
+      h += '</div>';
+    });
+    return h + '</section>';
+  }
+
+  function renderForm() {
+    var f = ui.form, edit = f.mode === 'edit', td = today();
+    var h = '<section><h2>' + (edit ? '약 정보 수정' : '새 약 등록') + '</h2>';
+    if (ui.formErr.length) h += '<div class="errbox" role="alert">저장하지 못했습니다. 아래 내용을 확인해 주세요.<ul>' + ui.formErr.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul></div>';
+    if (!edit) {
+      h += '<div class="radios" role="radiogroup" aria-label="복용 방식"><label><input type="radio" name="ftype" value="regular"' + (f.type === 'regular' ? ' checked' : '') + '> 정해진 시각에 복용</label>' +
+        '<label><input type="radio" name="ftype" value="prn"' + (f.type === 'prn' ? ' checked' : '') + '> 필요할 때 복용</label></div>';
+    } else {
+      h += '<div class="hint">' + (f.type === 'prn' ? '필요할 때 복용하는 약' : '정해진 시각에 복용하는 약') + '</div>';
+    }
+    h += '<label class="field" for="f-name">약 이름 <span class="req">(필수)</span></label><input type="text" id="f-name" data-f="name" value="' + esc(f.name) + '" autocomplete="off">';
+    h += '<label class="field" for="f-dose">1회 복용량 <span class="req">(필수)</span></label><input type="text" id="f-dose" data-f="dose" value="' + esc(f.dose) + '" placeholder="예: 1정, 5ml" autocomplete="off">';
+    if (f.type === 'regular') {
+      h += '<label class="field">복용 시각 <span class="req">(필수, 하루 여러 개 가능)</span></label><div class="hint" style="margin-top:0">예: 오전 8시 00분, 오후 1시 30분<br>12시 표기 주의: 오전 12시는 자정(00:00), 오후 12시는 낮 12시(12:00)로 저장됩니다.</div>';
+      f.times.forEach(function (t, i) {
+        h += '<div class="trow">' + timeSelects(i, f.tp[i] || toParts(t)) +
+          (f.times.length > 1 ? '<button class="btn sm warn" data-act="form-deltime" data-i="' + i + '">삭제</button>' : '') + '</div>';
+      });
+      h += '<button class="btn sm" data-act="form-addtime">+ 복용 시각 추가</button>';
+    }
+    h += '<label class="field" for="f-memo">복용 관련 메모 (선택)</label><textarea id="f-memo" data-f="memo" placeholder="예: 식후 30분">' + esc(f.memo) + '</textarea>';
+    if (!edit) {
+      h += '<label class="field" for="f-start">시작일 <span class="req">(필수)</span></label><input type="date" id="f-start" data-f="start" value="' + esc(f.start) + '">';
+    } else {
+      h += '<div class="note" style="margin-top:12px">시작일: ' + esc(f.start) + ' (등록 후에는 바꿀 수 없습니다)</div>';
+    }
+    h += '<label class="field" for="f-end">종료일 (선택)</label><input type="date" id="f-end" data-f="end" value="' + esc(f.end) + '"><div class="hint">비워 두면 중단하기 전까지 계속 복용하는 일정입니다.</div>';
+    if (edit) {
+      h += '<label class="field" for="f-eff">변경 적용일 <span class="req">(필수)</span></label><input type="date" id="f-eff" data-f="eff" min="' + td + '" value="' + esc(f.eff) + '">' +
+        '<div class="hint">선택한 날짜부터 이름·복용량·복용 시각·메모 변경이 적용됩니다. 오늘을 선택하면 아직 복용하지 않은 일정부터 적용되며, 이미 완료한 기록과 지난 기록은 당시 정보 그대로 유지됩니다.</div>';
+    }
+    h += '<div class="row" style="margin-top:16px"><button class="btn pri" data-act="form-save">저장</button><button class="btn" data-act="form-cancel">취소</button></div></section>';
+    return h;
+  }
+
+  function saveForm() {
+    var f = ui.form, errs = [], td = today(), edit = f.mode === 'edit';
+    var name = f.name.trim(), dose = f.dose.trim(), times = [];
+    if (!name) errs.push('약 이름을 입력해 주세요.');
+    if (name) {
+      var nk = name.replace(/\s+/g, '').toLowerCase(), dupMed = false;
+      db.meds.forEach(function (m) {
+        if (edit && m.id === f.id) return;
+        var st = medState(m);
+        if (st[1] && (m.stopFrom && m.stopFrom <= td || m.end && m.end < td)) return; // 이미 중단·종료된 약은 제외
+        m.versions.forEach(function (v) { if (v.name.replace(/\s+/g, '').toLowerCase() === nk) dupMed = true; });
+      });
+      if (dupMed) errs.push('이미 등록된 약 이름입니다(' + name + '). 같은 약은 중복해서 등록할 수 없으니, 기존 약을 수정하거나 다른 이름을 입력해 주세요.');
+    }
+    if (!dose) errs.push('1회 복용량을 입력해 주세요.');
+    if (!f.start) errs.push('시작일을 입력해 주세요.');
+    if (f.type === 'regular') {
+      var blank = false, seen = {}, dup = {};
+      f.times.forEach(function (t) {
+        if (!t) { blank = true; return; }
+        if (seen[t]) dup[t] = 1; seen[t] = 1; times.push(t);
+      });
+      if (blank) errs.push('비어 있는 복용 시각이 있습니다. 오전/오후, 시, 분을 모두 선택하거나 삭제해 주세요.');
+      if (!f.times.length) errs.push('복용 시각을 1개 이상 입력해 주세요.');
+      Object.keys(dup).forEach(function (t) { errs.push('같은 약에 같은 복용 시각(' + koTime(t) + ')이 중복되어 있습니다.'); });
+    }
+    if (f.start && f.end && f.end < f.start) errs.push('종료일은 시작일보다 빠를 수 없습니다.');
+    if (edit) {
+      if (!f.eff) errs.push('변경 적용일을 선택해 주세요.');
+      else if (f.eff < td) errs.push('변경 적용일은 오늘 또는 이후 날짜로 선택해 주세요.');
+      else if (f.end && f.eff > f.end) errs.push('변경 적용일이 종료일보다 늦습니다.');
+    }
+    ui.formErr = errs;
+    if (errs.length) { render(); window.scrollTo(0, 0); return; }
+    times.sort();
+    if (edit) {
+      var m = medById(f.id);
+      var nv = { from: f.eff, name: name, dose: dose, times: times, memo: f.memo.trim() };
+      var replaced = false;
+      m.versions.forEach(function (v, i) { if (v.from === nv.from) { m.versions[i] = nv; replaced = true; } });
+      if (!replaced) m.versions.push(nv);
+      m.versions.sort(function (a, b) { return a.from < b.from ? -1 : a.from > b.from ? 1 : 0; });
+      m.end = f.end || null;
+    } else {
+      db.meds.push({ id: newId(), type: f.type, start: f.start, end: f.end || null, stopFrom: null,
+        versions: [{ from: f.start, name: name, dose: dose, times: f.type === 'regular' ? times : [], memo: f.memo.trim() }] });
+    }
+    save(); ui.form = null; ui.formErr = []; render(); window.scrollTo(0, 0);
+  }
+
+  /* ===== 화면: 지난 기록 ===== */
+  function monthShift(ym, n) {
+    var y = +ym.slice(0, 4), mo = +ym.slice(5, 7) - 1 + n;
+    var d = new Date(y, mo, 1);
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1);
+  }
+  function renderPast() {
+    var h = '<section><h2>지난 기록</h2><div class="seg" role="group" aria-label="보기 방식">';
+    [['cal', '달력'], ['week', '주간 목록'], ['month', '월간 목록']].forEach(function (x) {
+      h += '<button data-act="past-view" data-v="' + x[0] + '" aria-pressed="' + (ui.pastView === x[0]) + '">' + x[1] + '</button>';
+    });
+    h += '</div>';
+    if (ui.pastView === 'cal') h += renderCal();
+    else if (ui.pastView === 'week') h += renderWeek();
+    else h += renderMonthList();
+    return h + '</section>';
+  }
+  function renderCal() {
+    var ym = ui.calMonth, td = today(), y = +ym.slice(0, 4), mo = +ym.slice(5, 7);
+    var startCol = (new Date(y, mo - 1, 1).getDay() + 6) % 7, days = new Date(y, mo, 0).getDate();
+    var h = '<div class="nav"><button class="btn sm" data-act="cal-prev" aria-label="이전 달">◀</button><div class="t">' + y + '년 ' + mo + '월</div><button class="btn sm" data-act="cal-next" aria-label="다음 달">▶</button></div>';
+    h += '<div class="cal">';
+    ['월', '화', '수', '목', '금', '토', '일'].forEach(function (w) { h += '<div class="wd">' + w + '</div>'; });
+    for (var i = 0; i < startCol; i++) h += '<div></div>';
+    for (var d = 1; d <= days; d++) {
+      var date = ym + '-' + pad(d), fut = date > td, cls = 'cell', body = '';
+      if (fut) { cls += ' fut'; }
+      else {
+        var s = sumOf(dayItems(date));
+        if (s.total === 0) body = '<span class="cs">예정 없음</span>';
+        else {
+          cls += s.done === s.total ? ' c-all' : (s.done === 0 ? ' c-zero' : ' c-part');
+          body = '<span class="cs">완료 ' + s.done + '/' + s.total + '회</span>';
+        }
+      }
+      if (date === td) cls += ' today';
+      if (date === ui.pastDate) cls += ' sel';
+      h += '<button class="' + cls + '" data-act="pick-day" data-date="' + date + '"' + (fut ? ' disabled' : '') + ' aria-label="' + shortDate(date) + '"><span class="dn">' + d + '</span>' + body + '</button>';
+    }
+    h += '</div><div class="legend"><span class="l1">모두 완료</span><span class="l2">일부 완료</span><span class="l3">모두 미복용</span><span>예정 없음</span></div>';
+    if (ui.pastDate && ui.pastDate <= td) {
+      h += '<div class="card" id="dayDetail"><h2 style="margin-top:0">' + labelDate(ui.pastDate) + '</h2>' + dayPanel(ui.pastDate, true) + '</div>';
+    } else h += '<div class="empty">날짜를 선택하면 그날의 기록을 볼 수 있습니다.</div>';
+    return h;
+  }
+  function miniDay(date) {
+    var items = dayItems(date), prn = dayPrn(date), s = sumOf(items), memo = db.dayMemo[date];
+    if (!items.length && !prn.length && !memo) return '';
+    var h = '<article class="dayblock"><div class="dh"><h4>' + shortDate(date) + '</h4><span class="sum">' + (s.total ? '완료 ' + s.done + '/' + s.total + '회' : '예정 없음') + '</span></div><ul class="mini">';
+    items.forEach(function (it) {
+      var r = it.rec;
+      h += '<li><span class="t">' + it.time + '</span>' + esc(it.name) + ' <span class="dose">' + esc(it.dose) + '</span> ' +
+        (it.taken ? '<span class="badge b-done">✔ 복용 완료</span> <span class="actual">' + actualText(r) + '</span>' : '<span class="badge b-none">○ 미복용</span>') +
+        (r && r.memo ? '<div class="note memo">메모: ' + esc(r.memo) + '</div>' : '') + '</li>';
+    });
+    prn.forEach(function (p) {
+      h += '<li><span class="t">' + (p.actual || '미상') + '</span>' + esc(p.snap.name) + ' <span class="dose">' + esc(p.snap.dose) + '</span> <span class="badge b-done">✔ 필요시 복용</span> <span class="actual">' + actualText(p) + '</span>' +
+        (p.memo ? '<div class="note memo">메모: ' + esc(p.memo) + '</div>' : '') + '</li>';
+    });
+    h += '</ul>' + (memo ? '<div class="note memo">하루 메모: ' + esc(memo) + '</div>' : '') +
+      '<div class="acts"><button class="btn sm" data-act="goto-day" data-date="' + date + '">이 날 보기·수정</button></div></article>';
+    return h;
+  }
+  function renderWeek() {
+    var ws = ui.weekStart, we = addDays(ws, 6), td = today();
+    var h = '<div class="nav"><button class="btn sm" data-act="week-prev" aria-label="이전 주">◀</button><div class="t">' + shortDate(ws) + ' ~ ' + shortDate(we) + '</div><button class="btn sm" data-act="week-next" aria-label="다음 주">▶</button></div>';
+    var body = '';
+    for (var i = 0; i < 7; i++) { var d = addDays(ws, i); if (d <= td) body += miniDay(d); }
+    if (ws > td) h += '<div class="empty">아직 오지 않은 주입니다.</div>';
+    else h += body || '<div class="empty">이 주에는 예정·기록이 없습니다.</div>';
+    return h;
+  }
+  function renderMonthList() {
+    var ym = ui.calMonth, td = today(), y = +ym.slice(0, 4), mo = +ym.slice(5, 7), days = new Date(y, mo, 0).getDate();
+    var h = '<div class="nav"><button class="btn sm" data-act="cal-prev" aria-label="이전 달">◀</button><div class="t">' + y + '년 ' + mo + '월</div><button class="btn sm" data-act="cal-next" aria-label="다음 달">▶</button></div>';
+    var body = '';
+    for (var d = 1; d <= days; d++) { var date = ym + '-' + pad(d); if (date <= td) body += miniDay(date); }
+    if (ym + '-01' > td) h += '<div class="empty">아직 오지 않은 달입니다.</div>';
+    else h += body || '<div class="empty">이 달에는 예정·기록이 없습니다.</div>';
+    return h;
+  }
+
+  /* ===== 화면: 메모 ===== */
+  function renderMemo() {
+    var date = ui.memoDate, td = today(), items = dayItems(date), prn = dayPrn(date);
+    var h = '<section><h2>메모</h2><label class="field" for="memo-date" style="margin-top:0">날짜 선택</label>' +
+      '<input type="date" id="memo-date" max="' + td + '" value="' + date + '"><div class="hint">' + labelDate(date) + '</div>';
+    h += '<h3>하루 메모 (몸 상태 등)</h3>' + memoArea('data-day-memo', date, db.dayMemo[date] || '');
+    h += '<h3>약별 복용 메모</h3>';
+    if (!items.length && !prn.length) h += '<div class="empty">이 날 메모를 남길 복용 건이 없습니다.</div>';
+    items.forEach(function (it) {
+      h += '<div class="card"><label class="field" style="margin:0 0 6px"><span class="itime" style="font-size:18px">' + it.time + '</span> ' + esc(it.name) + ' <span class="dose">' + esc(it.dose) + '</span></label>' +
+        memoArea('data-memo-key', it.key, it.rec ? it.rec.memo : '') + '</div>';
+    });
+    prn.forEach(function (p) {
+      h += '<div class="card"><label class="field" style="margin:0 0 6px"><span class="itime" style="font-size:18px">' + (p.actual || '미상') + '</span> ' + esc(p.snap.name) + ' <span class="dose">' + esc(p.snap.dose) + ' · 필요시 복용</span></label>' +
+        memoArea('data-memo-prn', p.id, p.memo) + '</div>';
+    });
+    return h + '</section>';
+  }
+
+  /* ===== 렌더링 ===== */
+  function overdueSig() {
+    var td = today(), t = hm(now());
+    return td + '#' + dayItems(td).filter(function (i) { return !i.taken && i.time <= t; }).map(function (i) { return i.key; }).join(',');
+  }
+  function render() {
+    var v = document.getElementById('view'), h;
+    if (ui.tab === 'today') h = renderToday();
+    else if (ui.tab === 'meds') h = renderMeds();
+    else if (ui.tab === 'past') h = renderPast();
+    else h = renderMemo();
+    v.innerHTML = h;
+    var tabs = document.querySelectorAll('.tab');
+    for (var i = 0; i < tabs.length; i++) {
+      if (tabs[i].getAttribute('data-tab') === ui.tab) tabs[i].setAttribute('aria-current', 'page'); else tabs[i].removeAttribute('aria-current');
+    }
+    lastSig = overdueSig(); renderedDate = today();
+    var ed = document.querySelector('.editor');
+    if (ed && ui.editor) ed.scrollIntoView({ block: 'center' });
+    refreshAlerts();
+  }
+
+  /* ===== 화면 알림 ===== */
+  var alerted = {}, lastDay = '';
+  function showAlert(items, late) {
+    var box = document.getElementById('alerts'), div = document.createElement('div');
+    div.className = 'alert'; div.setAttribute('role', 'alert');
+    var h = '<div class="atitle">' + (late ? '지난 시각의 미복용 약이 있습니다' : '복용 시간입니다') + '</div><ul>';
+    items.forEach(function (it) {
+      h += '<li data-akey="' + esc(it.key) + '"><b>' + it.time + '</b> ' + esc(it.name) + ' (' + esc(it.dose) + ')</li>';
+    });
+    h += '</ul><p class="ahint">닫아도 복용 완료로 처리되지 않습니다. 복용한 뒤 직접 체크해 주세요.</p><button class="btn pri sm" data-act="alert-close">닫기</button>';
+    div.innerHTML = h;
+    box.appendChild(div);
+  }
+  function refreshAlerts() {
+    var lis = document.querySelectorAll('#alerts li[data-akey]');
+    for (var i = 0; i < lis.length; i++) {
+      var r = db.recs[lis[i].getAttribute('data-akey')];
+      if (r && r.taken && !lis[i].classList.contains('a-done')) { lis[i].classList.add('a-done'); lis[i].appendChild(document.createTextNode(' — 복용 완료')); }
+    }
+  }
+  function tick() {
+    var n = now(), d = ymd(n), t = hm(n);
+    if (d !== lastDay) { lastDay = d; alerted = {}; }
+    var due = dayItems(d).filter(function (i) { return !i.taken && !i.extra && i.time <= t && !alerted[i.key]; });
+    if (due.length) {
+      var late = due.some(function (i) {
+        var p = i.time.split(':'); return (n.getHours() * 60 + n.getMinutes()) - (+p[0] * 60 + +p[1]) > 2;
+      });
+      due.forEach(function (i) { alerted[i.key] = 1; });
+      showAlert(due, late);
+    }
+    if (ui.tab === 'today' || ui.tab === 'past') {
+      var sig = overdueSig(), ae = document.activeElement;
+      var typing = ae && /^(INPUT|TEXTAREA)$/.test(ae.tagName) && document.getElementById('view').contains(ae);
+      if ((sig !== lastSig || renderedDate !== d) && !typing && !ui.editor) render();
+    }
+  }
+
+  /* ===== 이벤트 ===== */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (!b) return;
+    var act = b.getAttribute('data-act'), D = b.dataset, td = today();
+    switch (act) {
+      case 'tab': ui.tab = D.tab; ui.editor = null; if (D.tab === 'today') ui.viewDate = null; render(); window.scrollTo(0, 0); break;
+      case 'day-prev': ui.viewDate = addDays(ui.viewDate && ui.viewDate !== td ? ui.viewDate : td, -1); ui.editor = null; render(); break;
+      case 'day-next': ui.viewDate = addDays(ui.viewDate && ui.viewDate !== td ? ui.viewDate : td, 1); ui.editor = null; render(); break;
+      case 'day-today': ui.viewDate = null; ui.editor = null; render(); break;
+      case 'alert-close': b.closest('.alert').remove(); break;
+      case 'take-now': {
+        var it = findItem(D.date, D.key);
+        if (it && !it.taken) setTaken(D.key, snapOf(it), hm(now()));
+        ui.editor = null; render(); break;
+      }
+      case 'open-check': ui.editor = { kind: 's', mode: 'check', key: D.key, date: D.date }; render(); break;
+      case 'open-edit': ui.editor = { kind: 's', mode: 'edit', key: D.key, date: D.date }; render(); break;
+      case 'untake': untake(D.key); ui.editor = null; render(); break;
+      case 'toggle-memo': ui.memoOpen[D.mk] = !ui.memoOpen[D.mk]; render(); break;
+      case 'ed-cancel': ui.editor = null; render(); break;
+      case 'ed-save': {
+        var tm = document.getElementById('ed-time').value, unk = document.getElementById('ed-unk').checked, ed = ui.editor;
+        if (!unk && !tm) { document.getElementById('ed-err').textContent = '복용 시각을 입력하거나 ‘시각 미상’을 선택해 주세요.'; break; }
+        var actual = unk ? null : tm;
+        if (ed.kind === 's') {
+          var it2 = findItem(ed.date, ed.key);
+          if (it2) {
+            if (ed.mode === 'check') setTaken(ed.key, snapOf(it2), actual);
+            else { db.recs[ed.key].actual = actual; save(); }
+          }
+        } else if (ed.kind === 'pn') {
+          var m = medById(ed.medId), v = verAt(m, ed.date);
+          db.prn.push({ id: newId(), medId: m.id, date: ed.date, actual: actual, memo: '', snap: { name: v.name, dose: v.dose } }); save();
+        } else if (ed.kind === 'p') {
+          db.prn.forEach(function (p) { if (p.id === ed.id) p.actual = actual; }); save();
+        }
+        ui.editor = null; render(); break;
+      }
+      case 'prn-now': {
+        var pm = medById(D.id), pv = verAt(pm, td);
+        db.prn.push({ id: newId(), medId: pm.id, date: td, actual: hm(now()), memo: '', snap: { name: pv.name, dose: pv.dose } });
+        save(); render(); break;
+      }
+      case 'prn-open-new': ui.editor = { kind: 'pn', medId: D.id, date: D.date }; render(); break;
+      case 'prn-open-edit': ui.editor = { kind: 'p', id: D.id }; render(); break;
+      case 'prn-del': db.prn = db.prn.filter(function (p) { return p.id !== D.id; }); ui.editor = null; save(); render(); break;
+      case 'past-view': ui.pastView = D.v; ui.editor = null; render(); break;
+      case 'cal-prev': ui.calMonth = monthShift(ui.calMonth, -1); ui.editor = null; render(); break;
+      case 'cal-next': ui.calMonth = monthShift(ui.calMonth, 1); ui.editor = null; render(); break;
+      case 'week-prev': ui.weekStart = addDays(ui.weekStart, -7); render(); break;
+      case 'week-next': ui.weekStart = addDays(ui.weekStart, 7); render(); break;
+      case 'pick-day': ui.pastDate = D.date; ui.editor = null; render();
+        var dd = document.getElementById('dayDetail'); if (dd) dd.scrollIntoView({ block: 'start' }); break;
+      case 'goto-day': ui.pastView = 'cal'; ui.pastDate = D.date; ui.calMonth = D.date.slice(0, 7); ui.editor = null; render();
+        var dd2 = document.getElementById('dayDetail'); if (dd2) dd2.scrollIntoView({ block: 'start' }); break;
+      case 'med-new':
+        ui.form = { mode: 'new', type: 'regular', name: '', dose: '', memo: '', start: td, end: '', times: [''], tp: [toParts('')] };
+        ui.formErr = []; render(); window.scrollTo(0, 0); break;
+      case 'med-edit': {
+        var em = medById(D.id), cv = verAt(em, td < em.start ? em.start : td);
+        ui.form = { mode: 'edit', id: em.id, type: em.type, name: cv.name, dose: cv.dose, memo: cv.memo || '', start: em.start,
+          end: em.end || '', times: cv.times.length ? cv.times.slice() : [''], tp: (cv.times.length ? cv.times : ['']).map(toParts), eff: td };
+        ui.formErr = []; render(); window.scrollTo(0, 0); break;
+      }
+      case 'med-stop': ui.stopFor = D.id; ui.stopDate = td; ui.stopErr = ''; render(); break;
+      case 'med-stop-cancel': ui.stopFor = null; render(); break;
+      case 'med-stop-save': {
+        var sd = document.getElementById('stop-date').value;
+        ui.stopDate = sd;
+        if (!sd) { ui.stopErr = '중단 적용일을 선택해 주세요.'; render(); break; }
+        if (sd < td) { ui.stopErr = '중단 적용일은 오늘 또는 이후 날짜로 선택해 주세요.'; render(); break; }
+        medById(ui.stopFor).stopFrom = sd; save(); ui.stopFor = null; render(); break;
+      }
+      case 'form-cancel': ui.form = null; ui.formErr = []; render(); break;
+      case 'form-save': saveForm(); break;
+      case 'form-addtime': ui.form.times.push(''); ui.form.tp.push(toParts('')); render(); break;
+      case 'form-deltime': ui.form.times.splice(+D.i, 1); ui.form.tp.splice(+D.i, 1); render(); break;
+    }
+  });
+
+  document.addEventListener('input', function (e) {
+    var t = e.target;
+    if (t.hasAttribute('data-memo-key')) setMemo(t.getAttribute('data-memo-key'), t.value);
+    else if (t.hasAttribute('data-memo-prn')) {
+      var id = t.getAttribute('data-memo-prn');
+      db.prn.forEach(function (p) { if (p.id === id) p.memo = t.value; }); save();
+    } else if (t.hasAttribute('data-day-memo')) {
+      var dt = t.getAttribute('data-day-memo');
+      if (t.value) db.dayMemo[dt] = t.value; else delete db.dayMemo[dt];
+      save();
+    } else if (t.hasAttribute('data-f') && ui.form) {
+      var f = t.getAttribute('data-f');
+      if (f === 'time') ui.form.times[+t.getAttribute('data-i')] = t.value;
+      else ui.form[f] = t.value;
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    var t = e.target;
+    if (t.hasAttribute('data-t') && ui.form) {
+      var ti = +t.getAttribute('data-i');
+      ui.form.tp[ti][t.getAttribute('data-t')] = t.value;
+      ui.form.times[ti] = fromParts(ui.form.tp[ti]);
+    } else if (t.id === 'view-date') { ui.viewDate = t.value && t.value !== today() ? t.value : null; ui.editor = null; render(); }
+    else if (t.id === 'ed-unk') document.getElementById('ed-time').disabled = t.checked;
+    else if (t.id === 'memo-date') { ui.memoDate = (t.value && t.value <= today()) ? t.value : today(); render(); }
+    else if (t.name === 'ftype' && ui.form) { ui.form.type = t.value; render(); }
+    else if (t.hasAttribute('data-f') && ui.form) {
+      var f = t.getAttribute('data-f');
+      if (f === 'time') ui.form.times[+t.getAttribute('data-i')] = t.value; else ui.form[f] = t.value;
+    }
+  });
+
+  /* ===== 시작 ===== */
+  function init() {
+    load();
+    try { localStorage.setItem(KEY + '.probe', '1'); localStorage.removeItem(KEY + '.probe'); } catch (e) { storageOk = false; warnStorage(); }
+    var td = today();
+    ui.calMonth = td.slice(0, 7); ui.pastDate = td; ui.weekStart = mondayOf(td); ui.memoDate = td;
+    lastDay = td;
+    render();
+    tick(); // 페이지를 열 때마다 시각이 지난 미복용 약을 모아 안내
+    setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) tick(); });
+    window.addEventListener('pageshow', tick);
+  }
+
+  // 개발 검증용: 기준 시각 지정(화면 기능 아님)
+  window.__medTest = {
+    setNow: function (iso) {
+      offset = iso ? new Date(iso).getTime() - Date.now() : 0;
+      alerted = {}; lastDay = '';
+      var td = today(); ui.calMonth = td.slice(0, 7); ui.pastDate = td; ui.weekStart = mondayOf(td); ui.memoDate = td;
+      render(); tick();
+    },
+    data: function () { return db; }
+  };
+
+  init();
+})();
+</script>
+</body>
+</html>
